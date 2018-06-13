@@ -9,7 +9,7 @@
         function gtag( type, action, data ) {
             if ( type === "event" ) {
                 document.getElementById("logger").innerHTML +=
-                        ( data.event_category + " " + action + " " + data.event_label + "\n" );
+                        ( "CATEGORY " +  data.event_category + " ACTION " + action + " LABEL " + data.event_label + "\n" );
             }
         }
     </script>
