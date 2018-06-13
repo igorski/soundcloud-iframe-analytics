@@ -73,12 +73,19 @@ The tracked actions are:
  * _Playback paused_
  * _Playback resumed_
  * _Playback scrubbed_
+ * _Progress (num)_
+ * _Progress (num) with scrubbing_
  * _Played in full_
  * _Played in full with scrubbing_
 
-Where starts are counted only once per track (unless it has finished playback).
-Scrubbed indicates that the user has dragged the playback to a different point in the track and thus
-might have skipped sections.
+Where:
+
+* _starts_ are counted only once per track (unless it has finished playback, after which we can treat
+it as a new play).
+* _scrubbed_ and _with scrubbing_ indicates that the user has dragged the playback to a different point in the track and thus
+might have skipped sections. You can use this to determine engagement. _Playback scrubbed_ is tracked only
+once (unless track has finished playback and is restarted).
+* _progress_ is tracked for every 25 % of the track that has been played, expected values for _(num)_ are: 1/4, 2/4, 3/4 and 4/4
 
 ## Development
 

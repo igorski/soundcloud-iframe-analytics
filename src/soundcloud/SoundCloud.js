@@ -27,16 +27,24 @@ function init() {
     if ( playlists.length === 0 )
         return;
 
-    // load the SoundCloud Widget API
+    // process all IFrames one by one and add event listeners and Analytics hooks
 
-    TinyScriptLoader.loadScript( SOUNDCLOUD_API_URL, () => {
-        if ( "SC" in window ) {
-            loop( playlists, ( playlist ) => {
-                const widget = SC.Widget( playlist );
-                attachSoundCloudAnalytics( widget );
-            });
-        }
-    });
+    const processIFrames = () => {
+        loop( playlists, ( playlist ) => {
+            const widget = SC.Widget( playlist );
+            attachSoundCloudAnalytics( widget );
+        });
+    };
+
+    // ensure the SoundCloud Widget API has been loaded
+    // after which the processing of the IFrames can start
+
+    if ( "SC" in window && typeof SC.Widget === "function" ) {
+        processIFrames();
+    }
+    else {
+        TinyScriptLoader.loadScript( SOUNDCLOUD_API_URL, processIFrames );
+    }
 }
 
 /**
@@ -53,7 +61,7 @@ function attachSoundCloudAnalytics( widget ) {
     // is stored inside the closure of this function without
     // requiring pollution of external scope
 
-    let hasTimeout = false, currentId = "", tracks = {}, vo;
+    let hasTimeout = false, currentTrackTitle = "", currentTrackId = 0, tracks = {}, vo;
 
     // cache the id of the currently playing track as many events in the
     // playlist can cause this to change (e.g. finish fires after which
@@ -67,10 +75,13 @@ function attachSoundCloudAnalytics( widget ) {
     });
 
     widget.bind( ENUM.ERROR, () => {
-        trackEvent( ANALYTICS_EVENT_CATEGORY, "Error", currentId );
+        trackEvent( ANALYTICS_EVENT_CATEGORY, "Error", currentTrackTitle );
     });
 
-    widget.bind( ENUM.PLAY_PROGRESS, () => {
+    widget.bind( ENUM.PLAY_PROGRESS, ( playerData ) => {
+
+        if ( vo && vo.id === playerData.soundId )
+            setTrackProgress( vo, playerData );
 
         if ( hasTimeout )
             return;
@@ -87,31 +98,38 @@ function attachSoundCloudAnalytics( widget ) {
                 // to a previously played track, we can collect
                 // behavioural data for it again)
 
-                if ( currentId !== data.title ) {
-                    currentId = data.title;
+                if ( currentTrackId !== data.id ) {
+                    currentTrackTitle = data.title;
+                    currentTrackId    = data.id;
                     tracks = {};
                 }
             });
 
-        }, ( currentId.length === 0 ) ? 0 : INTERVAL );
+        }, ( currentTrackId === 0 ) ? 0 : INTERVAL );
     });
 
     widget.bind( ENUM.PLAY, () => {
         widget.getCurrentSound(( data ) => {
 
-            currentId = data.title;
-            vo = getSoundCloudTrackVO( tracks, data.title );
+            currentTrackTitle = data.title;
+            currentTrackId    = data.id;
+
+            vo = getSoundCloudTrackVO( tracks, data.title, data.id );
 
             if ( !vo.started || vo.finished ) {
+
                 vo.started  = true;
                 vo.finished = false;
                 vo.paused   = false;
                 vo.scrubbed = false;
-                trackEvent( ANALYTICS_EVENT_CATEGORY, "Playback started", currentId );
+                vo.progress = 0;
+                vo.progstep = 0;
+
+                trackEvent( ANALYTICS_EVENT_CATEGORY, "Playback started", currentTrackTitle );
             }
             else if ( vo.paused ) {
                 vo.paused = false;
-                trackEvent( ANALYTICS_EVENT_CATEGORY, "Playback resumed", currentId );
+                trackEvent( ANALYTICS_EVENT_CATEGORY, "Playback resumed", currentTrackTitle );
             }
         });
     });
@@ -119,7 +137,7 @@ function attachSoundCloudAnalytics( widget ) {
     // we do not invoke trackSoundCloudEvent() here as getCurrentSound() can have moved to the next song!
 
     widget.bind( ENUM.PAUSE, () => {
-        vo = getSoundCloudTrackVO( tracks, currentId );
+        vo = getSoundCloudTrackVO( tracks, currentTrackTitle, currentTrackId );
 
         // do async check for current sound, if it is the same then
         // we can treat the track as paused, if not then the pause
@@ -129,25 +147,25 @@ function attachSoundCloudAnalytics( widget ) {
         // track in a different widget API
 
         widget.getCurrentSound(( data ) => {
-            if ( data.title === vo.id && !vo.finished ) {
+            if ( data.id === vo.id && !vo.finished ) {
                 vo.paused = true;
-                trackEvent( ANALYTICS_EVENT_CATEGORY, "Playback paused", currentId );
+                trackEvent( ANALYTICS_EVENT_CATEGORY, "Playback paused", currentTrackTitle );
             }
         });
     });
     widget.bind( ENUM.SEEK, () => {
-        vo = getSoundCloudTrackVO( tracks, currentId );
-        if ( !vo.paused && !vo.finished ) {
+        vo = getSoundCloudTrackVO( tracks, currentTrackTitle, currentTrackId );
+        if ( !vo.scrubbed && !vo.paused && !vo.finished ) {
             vo.scrubbed = true;
-            trackEvent( ANALYTICS_EVENT_CATEGORY, "Playback scrubbed", currentId );
+            trackEvent( ANALYTICS_EVENT_CATEGORY, "Playback scrubbed", currentTrackTitle );
         }
     });
     widget.bind( ENUM.FINISH, () => {
-        vo = getSoundCloudTrackVO( tracks, currentId );
+        vo = getSoundCloudTrackVO( tracks, currentTrackTitle, currentTrackId );
         if ( !vo.finished ) {
             vo.finished = true;
             const event = ( !vo.scrubbed ) ? "Played in full" : "Played in full with scrubbing";
-            trackEvent( ANALYTICS_EVENT_CATEGORY, event, currentId );
+            trackEvent( ANALYTICS_EVENT_CATEGORY, event, currentTrackTitle );
         }
     });
 }
@@ -162,21 +180,70 @@ export { init, attachSoundCloudAnalytics };
  * created yet, it will create it inline.
  *
  * @param {Object} tracks data store for the tracks
- * @param {string} id identifier of the track
+ * @param {string} title of the track
+ * @param {number} id identifier of the track
  * @returns {Object}
  */
-function getSoundCloudTrackVO( tracks, id ) {
+function getSoundCloudTrackVO( tracks, title, id ) {
 
-    if ( !tracks.hasOwnProperty( id )) {
-        tracks[ id ] = {
-            id: id,
-            started: false,
-            paused: false,
-            scrubbed: false,
-            finished: false
+    if ( !tracks.hasOwnProperty( title )) {
+        tracks[ title ] = {
+            title:    title,    // track title, used as label for Google Analytics
+            id:       id,       // track unique identifier on SoundCloud
+            started:  false,    // whether track has started its playback
+            paused:   false,    // whether track playback is paused
+            scrubbed: false,    // whether track has been scrubbed during playback
+            finished: false,    // whether track has finished its playback, e.g. reached the end
+            progress: 0,        // current track playback progress (0 - 100 range)
+            progstep: 0         // the progress that has been tracked so far (4 steps, once every 25%)
         };
     }
-    return tracks[ id ];
+    else if ( tracks[ title ].id === 0 ) {
+        tracks[ title].id = id;
+    }
+    return tracks[ title ];
+}
+
+/**
+ * Get the track playback progress (in percent)
+ *
+ * @param {Object} vo SoundCloud Value Object
+ * @param {Object} playerData progress data Object
+ */
+function setTrackProgress( vo, playerData ) {
+
+    if ( typeof playerData.relativePosition !== "number" )
+        return;
+
+    vo.progress = Math.round( playerData.relativePosition * 100 );
+
+    // track once every 25 %
+
+    let doTrack = false, msg;
+
+    if ( vo.progress >= 99 && vo.progstep < 4 ) {
+        msg = "4/4";
+        vo.progstep = 4;
+    }
+    else if ( vo.progress >= 75 && vo.progstep < 3 ) {
+        msg = "3/4";
+        vo.progstep = 3;
+    }
+    else if ( vo.progress >= 50 && vo.progstep < 2 ) {
+        msg = "2/4";
+        vo.progstep = 2;
+    }
+    else if ( vo.progress >= 25 && vo.progstep < 1 ) {
+        msg = "1/4";
+        vo.progstep = 1;
+    }
+
+    if ( typeof msg === "string" ) {
+        if ( vo.scrubbed ) {
+            msg += " with scrubbing";
+        }
+        trackEvent( ANALYTICS_EVENT_CATEGORY, `Progress ${msg}`, vo.title );
+    }
 }
 
 /**
