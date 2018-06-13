@@ -33,7 +33,7 @@ function init() {
         if ( "SC" in window ) {
             loop( playlists, ( playlist ) => {
                 const widget = SC.Widget( playlist );
-                window.requestAnimationFrame( attachSoundCloudAnalytics.bind( window, widget ));
+                attachSoundCloudAnalytics( widget );
             });
         }
     });
@@ -106,6 +106,7 @@ function attachSoundCloudAnalytics( widget ) {
                 vo.started  = true;
                 vo.finished = false;
                 vo.paused   = false;
+                vo.scrubbed = false;
                 trackEvent( ANALYTICS_EVENT_CATEGORY, "Playback started", currentId );
             }
             else if ( vo.paused ) {
@@ -137,6 +138,7 @@ function attachSoundCloudAnalytics( widget ) {
     widget.bind( ENUM.SEEK, () => {
         vo = getSoundCloudTrackVO( tracks, currentId );
         if ( !vo.paused && !vo.finished ) {
+            vo.scrubbed = true;
             trackEvent( ANALYTICS_EVENT_CATEGORY, "Playback scrubbed", currentId );
         }
     });
@@ -144,7 +146,8 @@ function attachSoundCloudAnalytics( widget ) {
         vo = getSoundCloudTrackVO( tracks, currentId );
         if ( !vo.finished ) {
             vo.finished = true;
-            trackEvent( ANALYTICS_EVENT_CATEGORY, "Played in full", currentId );
+            const event = ( !vo.scrubbed ) ? "Played in full" : "Played in full with scrubbing";
+            trackEvent( ANALYTICS_EVENT_CATEGORY, event, currentId );
         }
     });
 }
@@ -169,6 +172,7 @@ function getSoundCloudTrackVO( tracks, id ) {
             id: id,
             started: false,
             paused: false,
+            scrubbed: false,
             finished: false
         };
     }

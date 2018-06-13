@@ -59,6 +59,27 @@ attachSoundCloudAnalytics( existingWidget );
 
 Bob's your uncle.
 
+## Event message format
+
+The message format for the tracked events is:
+
+ * **Category:** SoundCloud
+ * **Action:** See list below
+ * **Label:** Title of the SoundCloud track
+
+The tracked actions are:
+
+ * _Playback started_
+ * _Playback paused_
+ * _Playback resumed_
+ * _Playback scrubbed_
+ * _Played in full_
+ * _Played in full with scrubbing_
+
+Where starts are counted only once per track (unless it has finished playback).
+Scrubbed indicates that the user has dragged the playback to a different point in the track and thus
+might have skipped sections.
+
 ## Development
 
 ### Setup
