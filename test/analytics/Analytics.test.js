@@ -1,10 +1,10 @@
 "use strict";
 
-const chai  = require( "chai" );
+const chai = require( "chai" );
 
-import * as TemplateService from '../../src/services/TemplateService.js';
+import * as TemplateService from '../../src/analytics/Analytics.js';
 
-describe( "TemplateService", () =>
+describe( "Analytics", () =>
 {
     /* setup */
 

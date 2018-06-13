@@ -13,7 +13,7 @@ const dirApp    = path.join(__dirname, 'src');
  */
 module.exports = {
     entry: {
-        swa: path.join(dirApp, 'index')
+        sia: path.join(dirApp, 'index')
     },
     resolve: {
         modules: [

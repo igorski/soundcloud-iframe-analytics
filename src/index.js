@@ -1,7 +1,5 @@
-//import { Templates } from './config/Config';
+import { init } from './soundcloud/SoundCloud.js';
 
-// application bootstrap
+// application bootstraps when the document has finished loading, voila.
 
-window.onload = () => {
-
-};
+window.onload = init;

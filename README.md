@@ -1,4 +1,4 @@
-SoundCloud Widget Analytics
+SoundCloud IFRAME Analytics
 ===========================
 
 A minimal library that attaches Google Analytics event tracking to user interactions
@@ -8,19 +8,25 @@ This allows you to track user behaviour as well as have the events act as beacon
 more accurately see page session duration. It also helps you in finding out how popular
 some of your tracks are ;)
 
+## NPM
+
+You can install this repository as a node module using npm:
+
+    npm install soundcloud-iframe-analytics --save-dev
+
 ## How to integrate
 
-First of all, embed the Analytics trcking code as provided by Google.
+Embed the Analytics tracking code as provided by Google.
 
-You embed the IFRAMEs according to the code provided by SoundCloud. You do not need to make
+Embed the IFRAMEs according to the embed code provided by SoundCloud. You do not need to make
 any changes to your markup. E.g. simply inject one or more instances of:
 
-    <iframe width="{NUMBER}" height="{NUMBER}"
+    <iframe width="100%" height="300"
             scrolling="no" frameborder="no"
             src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/playlists/{STRING_ID}&amp;color=%23ff5500&amp;auto_play=false&amp;hide_related=false&amp;show_comments=true&amp;show_user=true&amp;show_reposts=false&amp;show_teaser=true">
     </iframe>
 
-Include the minimized production version of the script (_./dist/swa.min.js_) and the script
+Include the minimized production version of the script (_./dist/sia.min.js_) and the script
 will automatically attach event listeners once the page has finished loading.
 
 Alternatively, you can import the ES6 module from the _./src_ folder and embed the library
