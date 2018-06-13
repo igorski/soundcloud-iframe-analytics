@@ -5,6 +5,10 @@ const SOUNDCLOUD_API_URL       = "https://w.soundcloud.com/player/api.js";
 const SOUNDCLOUD_EMBED         = "soundcloud.com"; // URL fragment to determine iframe widget embed
 const ANALYTICS_EVENT_CATEGORY = "SoundCloud";
 
+/**
+ * Automatically attach Analytics handlers to all embedded
+ * SoundCloud <iframe> Elements currently in the page
+ */
 function init() {
 
     // retrieve all <iframe> embeds and filter them by the SoundCloud URL
@@ -35,10 +39,12 @@ function init() {
     });
 }
 
-export { init };
-
-/* internal methods */
-
+/**
+ * Attach event listeners and hooks into Analytics
+ * to a provided instance of SC.Widget
+ *
+ * @param {SC.Widget} widget
+ */
 function attachSoundCloudAnalytics( widget ) {
 
     const ENUM = SC.Widget.Events;
@@ -142,6 +148,10 @@ function attachSoundCloudAnalytics( widget ) {
         }
     });
 }
+
+export { init, attachSoundCloudAnalytics };
+
+/* internal methods */
 
 /**
  * Retrieves a Value Object associated with the playback

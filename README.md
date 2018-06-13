@@ -2,13 +2,21 @@ SoundCloud IFRAME Analytics
 ===========================
 
 A minimal library that attaches Google Analytics event tracking to user interactions
-performed on embedded SoundCloud iframes, both on single tracks as well as playlists.
+performed on embedded SoundCloud iframes, both on single tracks as well as playlists. It should
+work from IE8 upwards - though the real concern with compatibility is probably restricted to the
+requirements of the SoundCloud embed itself -
 
 This allows you to track user behaviour as well as have the events act as beacons to
 more accurately see page session duration. It also helps you in finding out how popular
 some of your tracks are ;)
 
-See it in action [here](http://rawgit.com/igorski/soundcloud-iframe-analytics/master/dist/index.html).
+Several versions of Google Analytics trackers are supported, namely:
+
+* Global Site Tag (gtag)
+* analytics.js (ga)
+* the legacy tracker (_gaq)
+
+See the library in action [here](http://rawgit.com/igorski/soundcloud-iframe-analytics/master/dist/index.html).
 
 ## Installation
 
@@ -18,7 +26,9 @@ You can install this repository as a node module using npm:
 
 ## How to integrate within your application
 
-Embed the Analytics tracking code as provided by Google into your template(s).
+Firstly, embed the Analytics tracking code as provided by Google into your template(s).
+
+### The easy way, just drop in the JS file
 
 Embed the SoundCloud iframes according to the embed code provided by SoundCloud. You do not need to make
 any changes to your markup. E.g. simply inject one or more instances of:
@@ -31,8 +41,23 @@ any changes to your markup. E.g. simply inject one or more instances of:
 Include the minimized production version of the script (_./dist/sia.min.js_) at the bottom of your page
 and the script will automatically attach event listeners to the iframes.
 
-Alternatively, you can import the ES6 module from the _./src_ folder and embed the library
-within your custom application code.
+### The "I want full control" way
+
+Alternatively, you can import the ES6 modules from the _./src_ folder and embed the library
+within your custom application code. You can use this in case you already use the SoundCloud Widget
+API to inject/control SoundCloud content in your page.
+
+You can attach Analytics triggers to Widget events by passing an existing instance of _SC.Widget_ to
+the _attachSoundCloudAnalytics()_ function of the _SoundCloud.js_ file, e.g.:
+
+```JavaScript
+import { attachSoundCloudAnalytics } from "soundcloud-iframe-analytics/soundcloud/SoundCloud.js";
+
+const existingWidget = ...; // SC.Widget instance created elsewhere in your application
+attachSoundCloudAnalytics( existingWidget );
+```
+
+Bob's your uncle.
 
 ## Development
 
