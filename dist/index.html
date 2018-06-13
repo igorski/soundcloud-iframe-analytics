@@ -7,9 +7,17 @@
     <script>
         // provide a mock Google Analytics tracker
         function gtag( type, action, data ) {
+
             if ( type === "event" ) {
-                document.getElementById("logger").innerHTML +=
-                        ( "CATEGORY " +  data.event_category + " ACTION " + action + " LABEL " + data.event_label + "\n" );
+
+                // poor mans logging
+
+                var Logger = document.getElementById( "logger" );
+                if ( Logger.innerHTML.length > 750 )
+                    Logger.innerHTML = "";
+
+                Logger.innerHTML +=
+                        ( data.event_category + " ACTION " + action + " LABEL " + data.event_label + "<br />" );
             }
         }
     </script>
@@ -25,12 +33,12 @@
             margin: 10px 0;
         }
         #logger {
-            position: absolute;
+            position: fixed;
             top: 0;
             right: 0;
-            width: 200px;
+            width: 320px;
             height: 200px;
-            border: 1px solid red;
+            border: 1px dashed #666;
             overflow: scroll;
             font-size: 50%;
         }
@@ -40,7 +48,11 @@
     <div id="application">
         <h1>Example SoundCloud IFRAME Analytics application</h1>
         <div id="logger"></div>
+        <h2>Single track</h2>
+        <iframe src="//w.soundcloud.com/player/?url=http://api.soundcloud.com/tracks/6981096&auto_play=true" seamless width="100%" height="166"></iframe>
+        <h2>Playlist 1</h2>
         <iframe width="100%" height="300" scrolling="no" frameborder="no" allow="autoplay" src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/playlists/6915761&color=%23ff5500&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true&visual=true"></iframe>
+        <h2>Playlist 2</h2>
         <iframe width="100%" height="300" scrolling="no" frameborder="no" allow="autoplay" src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/playlists/68245073&color=%23ff5500&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true&visual=true"></iframe>
     </div>
 <script type="text/javascript" src="sia.min.js"></script></body>

@@ -29,7 +29,7 @@ function init() {
         if ( "SC" in window ) {
             loop( playlists, ( playlist ) => {
                 const widget = SC.Widget( playlist );
-                attachSoundCloudAnalytics( widget );
+                window.requestAnimationFrame( attachSoundCloudAnalytics.bind( window, widget ));
             });
         }
     });
@@ -55,6 +55,14 @@ function attachSoundCloudAnalytics( widget ) {
     // we poll this at an INTERVAL to prevent overusing API calls
 
     const INTERVAL = 2500;
+
+    widget.bind( ENUM.READY, () => {
+        // no need to track, can be used for debugging purposes
+    });
+
+    widget.bind( ENUM.ERROR, () => {
+        trackEvent( ANALYTICS_EVENT_CATEGORY, "Error", currentId );
+    });
 
     widget.bind( ENUM.PLAY_PROGRESS, () => {
 
