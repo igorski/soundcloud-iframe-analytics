@@ -1,9 +1,10 @@
 {
   "name": "soundcloud-iframe-analytics",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Automated Google Analytics tracking of user interaction on embedded SoundCloud iframes",
   "author": "Igor Zinken",
   "license": "MIT",
+  "keywords": "soundcloud, widget, playlist, analytics, gtag, ga, behaviour, tracking",
   "scripts": {
     "dev": "cross-env NODE_ENV=dev webpack-dev-server --progress --mode development --config webpack.config.dev.js",
     "build": "webpack -p --progress --mode production --config webpack.config.build.js",
@@ -14,10 +15,8 @@
     "type": "git",
     "url": "https://github.com/igorski/soundcloud-iframe-analytics.git"
   },
-  "dependencies": {
-    "ejs-compiled-loader": "1.1.0"
-  },
   "devDependencies": {
+    "ejs-compiled-loader": "1.1.0",
     "babel-core": "6.26.0",
     "babel-loader": "7.1.4",
     "babel-preset-env": "1.6.1",

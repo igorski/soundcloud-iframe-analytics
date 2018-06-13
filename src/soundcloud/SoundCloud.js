@@ -48,7 +48,6 @@ function attachSoundCloudAnalytics( widget ) {
     // requiring pollution of external scope
 
     let hasTimeout = false, currentId = "", tracks = {}, vo;
-    
 
     // cache the id of the currently playing track as many events in the
     // playlist can cause this to change (e.g. finish fires after which
