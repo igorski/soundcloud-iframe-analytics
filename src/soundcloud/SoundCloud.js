@@ -41,11 +41,14 @@ export { init };
 
 function attachSoundCloudAnalytics( widget ) {
 
+    const ENUM = SC.Widget.Events;
+
     // we can have multiple playlists, all their individual data
     // is stored inside the closure of this function without
     // requiring pollution of external scope
 
     let hasTimeout = false, currentId = "", tracks = {}, vo;
+    
 
     // cache the id of the currently playing track as many events in the
     // playlist can cause this to change (e.g. finish fires after which
@@ -53,9 +56,9 @@ function attachSoundCloudAnalytics( widget ) {
     // we poll this at an INTERVAL to prevent overusing API calls
 
     const INTERVAL = 2500;
-    window.w = widget;
-    widget.bind( SC.Widget.Events.PLAY_PROGRESS, () => {
-               console.warn("Ppi");
+
+    widget.bind( ENUM.PLAY_PROGRESS, () => {
+
         if ( hasTimeout )
             return;
 
@@ -80,7 +83,7 @@ function attachSoundCloudAnalytics( widget ) {
         }, ( currentId.length === 0 ) ? 0 : INTERVAL );
     });
 
-    widget.bind( SC.Widget.Events.PLAY, () => {
+    widget.bind( ENUM.PLAY, () => {
         widget.getCurrentSound(( data ) => {
 
             currentId = data.title;
@@ -101,7 +104,7 @@ function attachSoundCloudAnalytics( widget ) {
 
     // we do not invoke trackSoundCloudEvent() here as getCurrentSound() can have moved to the next song!
 
-    widget.bind( SC.Widget.Events.PAUSE, () => {
+    widget.bind( ENUM.PAUSE, () => {
         vo = getSoundCloudTrackVO( tracks, currentId );
 
         // do async check for current sound, if it is the same then
@@ -118,13 +121,13 @@ function attachSoundCloudAnalytics( widget ) {
             }
         });
     });
-    widget.bind( SC.Widget.Events.SEEK, () => {
+    widget.bind( ENUM.SEEK, () => {
         vo = getSoundCloudTrackVO( tracks, currentId );
         if ( !vo.paused && !vo.finished ) {
             trackEvent( ANALYTICS_EVENT_CATEGORY, "Playback scrubbed", currentId );
         }
     });
-    widget.bind( SC.Widget.Events.FINISH, () => {
+    widget.bind( ENUM.FINISH, () => {
         vo = getSoundCloudTrackVO( tracks, currentId );
         if ( !vo.finished ) {
             vo.finished = true;

@@ -2,7 +2,7 @@
 
 const chai = require( "chai" );
 
-import * as TemplateService from '../../src/analytics/Analytics.js';
+import { trackEvent, reset } from '../../src/analytics/Analytics.js';
 
 describe( "Analytics", () =>
 {
@@ -12,45 +12,73 @@ describe( "Analytics", () =>
     const assert = chai.assert,
           expect = chai.expect;
 
-    let container;
-
     // data mocks
-    const templateBody  = "<h1>Mock template</h1>";
-    const template = () => templateBody;
-    const data = {
-        title: "foo"
-    };
 
-    before(() => {
-        container = document.createElement( "div" );
-    });
+    const category = "foo",
+          action   = "bar",
+          label    = "baz",
+          value    = 100;
 
-    beforeEach(() => {
-        // ensure container is empty
-        container.innerHMTL = "";
+    afterEach(() => {
+        reset();
     });
 
     /* actual unit tests */
 
-    it( "should not inject when no valid template is passed", () => {
-        const nonTemplate = {};
-        assert.notOk(
-            TemplateService.inject( nonTemplate, container, data ),
-            "expected to fail as no valid template was passed"
-        )
+    it("should track using GlobalSiteTag as tracker", ( done ) => {
+        window.gtag = ( type, a, data ) => {
+
+            assert.strictEqual( type, "event" );
+            assert.ok( typeof data === "object" );
+
+            assert.strictEqual( a, action );
+            assert.strictEqual( data.event_category, category );
+            assert.strictEqual( data.event_label,    label );
+            assert.strictEqual( data.value,          value );
+
+            // clean up and complete test
+
+            delete window.gtag;
+            done();
+        };
+        trackEvent( category, action, label, value );
     });
 
-    it( "should inject when a valid template is passed", () => {
-        assert.ok(
-            container.innerHMTL.length === 0,
-            "expected on HTML content in the container prior to injection"
-        );
+    it("should track to the ga.js tracker", ( done ) => {
+        window.ga = ( fn, type, c, a, l ) => {
 
-        const template = () => "<h1>Foo</h1>";
+            assert.strictEqual( fn,   "send" );
+            assert.strictEqual( type, "event" );
 
-        assert.ok(
-            TemplateService.inject( template, container, data ),
-            "expected not to fail as a valid template was passed"
-        );
+            assert.strictEqual( c, category );
+            assert.strictEqual( a, action );
+            assert.strictEqual( l, label );
+
+            // clean up and complete test
+
+            delete window.ga;
+            done();
+        };
+        trackEvent( category, action, label );
+    });
+
+    it("should track to the legacy tracker", ( done ) => {
+        window._gaq = {
+            push: ( args ) => {
+
+                assert.ok( Array.isArray( args ));
+
+                assert.strictEqual( args[0], "_trackEvent" );
+                assert.strictEqual( args[1], category );
+                assert.strictEqual( args[2], action );
+                assert.strictEqual( args[3], label );
+
+                // clean up and complete test
+
+                delete window._gaq;
+                done();
+            }
+        };
+        trackEvent( category, action, label );
     });
 });

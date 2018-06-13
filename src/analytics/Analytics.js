@@ -1,4 +1,4 @@
-const DEBUG = true;
+const DEBUG = false;
 
 let isEnabled = true,
     _tracker;
@@ -31,7 +31,13 @@ function trackEvent( category, action, label, optValue )
     tracker.event( category, action, label, optValue );
 }
 
-export { trackEvent };
+function reset()
+{
+    isEnabled = true;
+    _tracker  = null;
+}
+
+export { trackEvent, reset };
 
 /* internal methods */
 
