@@ -153,9 +153,15 @@ function attachSoundCloudAnalytics( widget ) {
             }
         });
     });
-    widget.bind( ENUM.SEEK, () => {
+    widget.bind( ENUM.SEEK, ( playerData ) => {
         vo = getSoundCloudTrackVO( tracks, currentTrackTitle, currentTrackId );
-        if ( !vo.scrubbed && !vo.paused && !vo.finished ) {
+
+        // only once per play
+
+        if ( vo.scrubbed )
+            return;
+
+        if ( !vo.paused && !vo.finished ) {
             vo.scrubbed = true;
             trackEvent( ANALYTICS_EVENT_CATEGORY, "Playback scrubbed", currentTrackTitle );
         }
@@ -207,6 +213,16 @@ function getSoundCloudTrackVO( tracks, title, id ) {
 /**
  * Get the track playback progress (in percent)
  *
+ * @param {Object} playerData progress data Object
+ */
+function sanitizeProgress( playerData ) {
+    return Math.round( playerData.relativePosition * 100 );
+}
+
+/**
+ * Updates the progress value of the given VO
+ * This also broadcasts the progress every 25 % of the track playback
+ *
  * @param {Object} vo SoundCloud Value Object
  * @param {Object} playerData progress data Object
  */
@@ -215,11 +231,11 @@ function setTrackProgress( vo, playerData ) {
     if ( typeof playerData.relativePosition !== "number" )
         return;
 
-    vo.progress = Math.round( playerData.relativePosition * 100 );
+    vo.progress = sanitizeProgress( playerData );
 
     // track once every 25 %
 
-    let doTrack = false, msg;
+    let msg;
 
     if ( vo.progress >= 99 && vo.progstep < 4 ) {
         msg = "4/4";
