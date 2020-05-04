@@ -51,7 +51,7 @@ You can attach Analytics triggers to Widget events by passing an existing instan
 the _attachSoundCloudAnalytics()_ function of the _SoundCloud.js_ file, e.g.:
 
 ```JavaScript
-import { attachSoundCloudAnalytics } from "soundcloud-iframe-analytics/src/soundcloud/SoundCloud";
+import { attachSoundCloudAnalytics } from "soundcloud-iframe-analytics/src/third_party/soundcloud";
 
 const existingWidget = ...; // SC.Widget instance created elsewhere in your application
 attachSoundCloudAnalytics( existingWidget );
