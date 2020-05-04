@@ -1,5 +1,5 @@
-import * as TinyScriptLoader from "tiny-script-loader";
-import { trackEvent } from '../analytics/Analytics';
+import TinyScriptLoader from "tiny-script-loader";
+import { trackEvent } from "./analytics";
 
 const SOUNDCLOUD_API_URL       = "https://w.soundcloud.com/player/api.js";
 const SOUNDCLOUD_EMBED         = "soundcloud.com"; // URL fragment to determine iframe widget embed

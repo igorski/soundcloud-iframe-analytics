@@ -1,4 +1,4 @@
-import { init } from './soundcloud/SoundCloud.js';
+import { init } from './third_party/soundcloud';
 
 // initialize the code as soon as the HTML Document is ready
 

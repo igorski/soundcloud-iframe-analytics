@@ -2,7 +2,7 @@
 
 const chai = require( "chai" );
 
-import { trackEvent, reset } from '../../src/analytics/Analytics.js';
+import { trackEvent, reset } from '../../src/third_party/analytics.js';
 
 describe( "Analytics", () =>
 {
