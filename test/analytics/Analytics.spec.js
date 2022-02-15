@@ -1,16 +1,7 @@
-"use strict";
-
-const chai = require( "chai" );
-
 import { trackEvent, reset } from '../../src/third_party/analytics.js';
 
-describe( "Analytics", () =>
-{
+describe( "Analytics", () => {
     /* setup */
-
-    // use Chai assertion library
-    const assert = chai.assert,
-          expect = chai.expect;
 
     // data mocks
 
@@ -28,13 +19,13 @@ describe( "Analytics", () =>
     it("should track using GlobalSiteTag as tracker", ( done ) => {
         window.gtag = ( type, a, data ) => {
 
-            assert.strictEqual( type, "event" );
-            assert.ok( typeof data === "object" );
+            expect( type ).toEqual( "event" );
+            expect( typeof data ).toEqual( "object" );
 
-            assert.strictEqual( a, action );
-            assert.strictEqual( data.event_category, category );
-            assert.strictEqual( data.event_label,    label );
-            assert.strictEqual( data.value,          value );
+            expect( a ).toEqual( action );
+            expect( data.event_category ).toEqual( category );
+            expect( data.event_label ).toEqual( label );
+            expect( data.value ).toEqual( value );
 
             // clean up and complete test
 
@@ -47,12 +38,12 @@ describe( "Analytics", () =>
     it("should track to the ga.js tracker", ( done ) => {
         window.ga = ( fn, type, c, a, l ) => {
 
-            assert.strictEqual( fn,   "send" );
-            assert.strictEqual( type, "event" );
+            expect( fn ).toEqual( "send" );
+            expect( type ).toEqual( "event" );
 
-            assert.strictEqual( c, category );
-            assert.strictEqual( a, action );
-            assert.strictEqual( l, label );
+            expect( c ).toEqual( category );
+            expect( a ).toEqual( action );
+            expect( l ).toEqual( label );
 
             // clean up and complete test
 
@@ -66,12 +57,12 @@ describe( "Analytics", () =>
         window._gaq = {
             push: ( args ) => {
 
-                assert.ok( Array.isArray( args ));
+                expect( Array.isArray( args )).toBe( true );
 
-                assert.strictEqual( args[0], "_trackEvent" );
-                assert.strictEqual( args[1], category );
-                assert.strictEqual( args[2], action );
-                assert.strictEqual( args[3], label );
+                expect( args[ 0 ]).toEqual( "_trackEvent" );
+                expect( args[ 1 ]).toEqual( category );
+                expect( args[ 2 ]).toEqual( action );
+                expect( args[ 3 ]).toEqual( label );
 
                 // clean up and complete test
 

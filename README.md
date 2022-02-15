@@ -1,16 +1,15 @@
-SoundCloud IFRAME Analytics
+SoundCloud iframe Analytics
 ===========================
 
-A minimal library that attaches Google Analytics event tracking to user interactions
-performed on embedded SoundCloud iframes, both on single tracks as well as playlists. It should
-work from IE8 upwards - though the real concern with compatibility is probably restricted to the
-requirements of the SoundCloud embed itself -
+SoundCloud Iframe Analytics (SIA) is a minimal library that attaches Google Analytics event tracking
+to user interactions performed on SoundCloud iframes embedded within your HTML page, both on single
+tracks as well as full playlists.
 
 This allows you to track user behaviour as well as have the events act as beacons to
 more accurately see page session duration. It also helps you in finding out how popular
 some of your tracks are ;)
 
-Several versions of Google Analytics trackers are supported, namely:
+Multiple versions of the Google Analytics tracker are supported, namely:
 
 * Global Site Tag (gtag)
 * analytics.js (ga)
@@ -22,42 +21,67 @@ See the library in action [here](http://rawgit.com/igorski/soundcloud-iframe-ana
 
 You can install this repository as a node module using npm:
 
-    npm install soundcloud-iframe-analytics --save-dev
+```
+npm install soundcloud-iframe-analytics --save-dev
+```
 
 ## How to integrate within your application
 
-Firstly, embed the Analytics tracking code as provided by Google into your template(s).
+First, embed the Analytics tracking code as provided by Google into your HTML template(s).
 
-### The easy way, just drop in the JS file
+Then, add a SoundCloud iframe embed similar to the below:
 
-Embed the SoundCloud iframes according to the embed code provided by SoundCloud. You do not need to make
-any changes to your markup. E.g. simply inject one or more instances of:
-
-    <iframe width="100%" height="300"
-            scrolling="no" frameborder="no"
-            src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/playlists/{STRING_ID}&amp;color=%23ff5500&amp;auto_play=false&amp;hide_related=false&amp;show_comments=true&amp;show_user=true&amp;show_reposts=false&amp;show_teaser=true">
+```html
+    <iframe
+        width="100%" height="300"
+        scrolling="no" frameborder="no"
+        src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/playlists/{STRING_ID}&amp;color=%23ff5500&amp;auto_play=false&amp;hide_related=false&amp;show_comments=true&amp;show_user=true&amp;show_reposts=false&amp;show_teaser=true">
     </iframe>
+```
 
-Include the minimized production version of the script (_./dist/sia.min.js_) at the bottom of your page
-and the script will automatically attach event listeners to the iframes.
+Basically, you embed the SoundCloud iframes according to the embed code provided by SoundCloud.
+You do not need to make any changes to the generated markup.
+
+### The easy way : automatically attach tracking to static HTML pages
+
+When your HTML pages are static / contain the iframe content upon delivery, you can
+easily attach the Analytics tracking by adding the following snippet to your JavaScript code:
+
+```js
+import { init } from "soundcloud-iframe-analytics";
+
+function readyHandler() {
+    document.removeEventListener( "DOMContentLoaded", readyHandler );
+    init();
+}
+document.addEventListener( "DOMContentLoaded", readyHandler );
+```
+
+The above will run once when the document finishes loading. It will then scan the document for
+iframes with SoundCloud content and attach the listeners automatically.
 
 ### The "I want full control" way
 
-Alternatively, you can import the ES6 modules from the _./src_ folder and embed the library
-within your custom application code. You can use this in case you already use the SoundCloud Widget
-API to inject/control SoundCloud content in your page.
+Alternatively, in case your page is an SPA that injects/removes SoundCloud iframes at runtime, you
+need to keep track of additionally added iframes _after_ the document has finished loading.
 
-You can attach Analytics triggers to Widget events by passing an existing instance of _SC.Widget_ to
-the _attachSoundCloudAnalytics()_ function of the _SoundCloud.js_ file, e.g.:
+You can attach Analytics triggers to injected iframes by passing their reference to the
+_attachSoundCloudAnalytics()_-method. Your pseudo code would look like:
 
-```JavaScript
-import { attachSoundCloudAnalytics } from "soundcloud-iframe-analytics/src/third_party/soundcloud";
+```js
+import { init, attachSoundCloudAnalytics } from "soundcloud-iframe-analytics";
 
-const existingWidget = ...; // SC.Widget instance created elsewhere in your application
-attachSoundCloudAnalytics( existingWidget );
+async function executedOnce() {
+    await init(); // loads SoundCloud SDK
+}
+
+function executeAfterNewIframeIsInjected( iframeSelector ) {
+    attachSoundCloudAnalytics( iframeSelector );
+}
 ```
 
-Bob's your uncle.
+And Bob's your uncle. SIA will automatically detect whether the same iframe is
+passed for attachment of Analytics events and will deduplicate everything accordingly.
 
 ## Event message format
 
@@ -93,7 +117,9 @@ once (unless track has finished playback and is restarted).
 
 Install dependencies as usual:
 
-    npm install
+```
+npm install
+```
 
 ### Local development
 
@@ -101,26 +127,30 @@ Launching a local server (_webpack-dev-server_) with livereload and
 automatic recompilation on changes. Server will be available at
 _http://localhost:8080_
 
-    npm run dev
+```
+npm run dev
+```
 
 ### Creating a production build
 
-    npm run build
+```
+npm run build
+```
 
 Build output will be stored in _./dist_-folder.
 
 ### Unit testing
 
-Unit tests are run via Mocha, which is installed as a dependency, along
-with Chai as the assertion library. You can run the tests by using:
+Unit tests are run via Jest, which is installed as a dependency.
+You can run the tests by using:
 
-    npm test
+```
+npm test
+```
 
 Unit tests go in the _./test_-folder. The file name for a unit test must
-be equal to the file it is testing, but contain the suffix ".test",
-e.g. _Functions.js_ will have a test file _Functions.test.js_.
-
-Tests will be available at _http://localhost:8080/test/test.html_.
+be equal to the file it is testing, but contain the suffix ".spec.js",
+e.g. _Functions.js_ will have a test file _Functions.spec.js_.
 
 ### Configuration
 

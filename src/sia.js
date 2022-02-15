@@ -1,61 +1,95 @@
 import TinyScriptLoader from "tiny-script-loader";
-import { trackEvent } from "./analytics";
+import { trackEvent } from "./third_party/analytics";
 
 const SOUNDCLOUD_API_URL       = "https://w.soundcloud.com/player/api.js";
 const SOUNDCLOUD_EMBED         = "soundcloud.com"; // URL fragment to determine iframe widget embed
 const ANALYTICS_EVENT_CATEGORY = "SoundCloud";
 
+// hold a reference to the Widget API
+// we do this upon load as loading subsequent SDK's from SoundCloud will overwrite the
+// global SC Object making the SC.Widget unavailable !!
+
+let widgetAPI = "SC" in window && typeof window.SC.Widget === "function" ? window.SC.Widget : null;
+
 /**
- * Automatically attach Analytics handlers to all embedded
- * SoundCloud <iframe> Elements currently in the page
+ * Loads SoundCloud Widget SDK (if it wasn't globally available yet)
+ * and automatically attaches Analytics handlers to all embedded
+ * SoundCloud HTMLIFrameElements currently in the document
+ *
+ * @returns {Promise}
  */
-function init() {
+export function init() {
+    return new Promise(( resolve, reject ) => {
 
-    // retrieve all <iframe> embeds and filter them by the SoundCloud URL
-    // we use older DOM methods instead of querySelectorAll() to provide
-    // a very simple backwards compatibility
+        // process all IFrames one by one and add event listeners and Analytics hooks
 
-    const iframes   = document.getElementsByTagName( "iframe" );
-    const playlists = [];
-    loop( iframes, ( iframe ) => {
-        if ( iframe.hasAttribute( "src" ) && iframe.getAttribute( "src" ).indexOf( SOUNDCLOUD_EMBED ) > -1 )
-            playlists.push( iframe );
+        const processIFrames = () => {
+
+            // retrieve all <iframe> embeds and filter them by the SoundCloud URL
+            // we use older DOM methods instead of querySelectorAll() to provide
+            // a very simple backwards compatibility
+
+            const iframes   = document.getElementsByTagName( "iframe" );
+            const playlists = [];
+            loop( iframes, ( iframe ) => {
+                if ( iframe.hasAttribute( "src" ) && iframe.getAttribute( "src" ).includes( SOUNDCLOUD_EMBED )) {
+                    playlists.push( iframe );
+                }
+            });
+
+            // if no playlists were found, don't do anything.
+
+            if ( playlists.length > 0 ) {
+                loop( playlists, ( playlist ) => {
+                    attachSoundCloudAnalytics( playlist );
+                });
+            }
+            resolve();
+        };
+
+        // ensure the SoundCloud Widget API has been loaded
+        // after which the processing of the IFrames can start
+
+        if ( widgetAPI ) {
+            processIFrames();
+        } else {
+            TinyScriptLoader.loadScript( SOUNDCLOUD_API_URL, () => {
+                widgetAPI = widgetAPI || window.SC.Widget;
+                processIFrames();
+            }, reject );
+        }
     });
-
-    // if no playlists were found, don't do anything.
-
-    if ( playlists.length === 0 )
-        return;
-
-    // process all IFrames one by one and add event listeners and Analytics hooks
-
-    const processIFrames = () => {
-        loop( playlists, ( playlist ) => {
-            const widget = SC.Widget( playlist );
-            attachSoundCloudAnalytics( widget );
-        });
-    };
-
-    // ensure the SoundCloud Widget API has been loaded
-    // after which the processing of the IFrames can start
-
-    if ( "SC" in window && typeof SC.Widget === "function" ) {
-        processIFrames();
-    }
-    else {
-        TinyScriptLoader.loadScript( SOUNDCLOUD_API_URL, processIFrames );
-    }
 }
 
 /**
  * Attach event listeners and hooks into Analytics
- * to a provided instance of SC.Widget
+ * to the provided HTMLIFrameElement
  *
- * @param {SC.Widget} widget
+ * @param {HTMLIFrameElement} element
  */
-function attachSoundCloudAnalytics( widget ) {
+export function attachSoundCloudAnalytics( element ) {
 
-    const ENUM = SC.Widget.Events;
+    if ( !element ) {
+        return;
+    }
+
+    // don't create a Widget TWICE for the same IFrame / IFrame src
+
+    const existingSIAId = element.getAttribute( "data-sia" );
+    const iframeURL = element.getAttribute( "src" );
+
+    if ( existingSIAId && existingSIAId === iframeURL ) {
+        return false;
+    }
+
+    // store a reference to the element being bound to a widget via SIA
+
+    element.setAttribute( "data-sia", iframeURL );
+
+    // wrap element in SC.Widget instance
+    const widget = widgetAPI( element );
+
+    const ENUM = widgetAPI.Events;
 
     // we can have multiple playlists, all their individual data
     // is stored inside the closure of this function without
@@ -175,8 +209,6 @@ function attachSoundCloudAnalytics( widget ) {
         }
     });
 }
-
-export { init, attachSoundCloudAnalytics };
 
 /* internal methods */
 
