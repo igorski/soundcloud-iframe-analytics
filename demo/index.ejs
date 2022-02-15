@@ -24,36 +24,56 @@
     <style type="text/css">
         body {
             font-family: sans-serif;
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            max-height: 100vh;
+            overflow: hidden;
         }
+
         #application {
-            max-width: 500px;
+            max-width: 990px;
             margin: 0 auto;
+            height: 100%;
         }
-        #application iframe {
+
+        #wrapper {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        #tracks, #logger {
+            flex: .5 1;
+            margin: 0 16px;
+            height: 100vh;
+            overflow-y: auto;
+        }
+
+        #tracks iframe {
             margin: 10px 0;
         }
+
         #logger {
-            position: fixed;
-            top: 0;
-            right: 0;
-            width: 320px;
-            height: 200px;
-            border: 1px dashed #666;
-            overflow: scroll;
-            font-size: 50%;
+            border-left: 1px dashed #666;
+            padding: 0 0 0 16px;
+            font-size: 75%;
         }
     </style>
 </head>
 <body>
     <div id="application">
         <h1>Example SoundCloud IFRAME Analytics application</h1>
-        <div id="logger"></div>
-        <h2>Single track</h2>
-        <iframe src="//w.soundcloud.com/player/?url=http://api.soundcloud.com/tracks/6981096&auto_play=true" seamless width="100%" height="166"></iframe>
-        <h2>Playlist 1</h2>
-        <iframe width="100%" height="300" scrolling="no" frameborder="no" allow="autoplay" src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/playlists/6915761&color=%23ff5500&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true&visual=true"></iframe>
-        <h2>Playlist 2</h2>
-        <iframe width="100%" height="300" scrolling="no" frameborder="no" allow="autoplay" src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/playlists/68245073&color=%23ff5500&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true&visual=true"></iframe>
+        <div id="wrapper">
+            <div id="tracks">
+                <h2>Single track</h2>
+                <iframe src="//w.soundcloud.com/player/?url=http://api.soundcloud.com/tracks/6981096&auto_play=true" seamless width="100%" height="166"></iframe>
+                <h2>Playlist 1</h2>
+                <iframe width="100%" height="300" scrolling="no" frameborder="no" allow="autoplay" src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/playlists/6915761&color=%23ff5500&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true&visual=true"></iframe>
+                <h2>Playlist 2</h2>
+                <iframe width="100%" height="300" scrolling="no" frameborder="no" allow="autoplay" src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/playlists/68245073&color=%23ff5500&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true&visual=true"></iframe>
+            </div>
+            <div id="logger"></div>
+        </div>
     </div>
 </body>
 </html>

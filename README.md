@@ -1,5 +1,4 @@
-SoundCloud iframe Analytics
-===========================
+# SoundCloud iframe Analytics
 
 SoundCloud Iframe Analytics (SIA) is a minimal library that attaches Google Analytics event tracking
 to user interactions performed on SoundCloud iframes embedded within your HTML page, both on single
@@ -50,20 +49,35 @@ easily attach the Analytics tracking by adding the following snippet to your Jav
 ```js
 import { init } from "soundcloud-iframe-analytics";
 
-function readyHandler() {
+async function readyHandler() {
     document.removeEventListener( "DOMContentLoaded", readyHandler );
-    init();
+    const embeds = await init();
 }
 document.addEventListener( "DOMContentLoaded", readyHandler );
 ```
 
 The above will run once when the document finishes loading. It will then scan the document for
-iframes with SoundCloud content and attach the listeners automatically.
+iframes with SoundCloud content and attach the listeners automatically. The returned value is
+a list of successfully bound listeners for each iframe, where each value is wrapped inside
+an object like so:
+
+```js
+{
+    element : HTMLIFrameElement,
+    widget  : SC.Widget,
+    dispose : Function
+}
+```
+
+In case you are wondering what those are good for, it's good to know that if your SoundCloud
+content remains on the page throughout its lifetime, you can safely ignore these. But if you
+are curious, you are likely someone who is looking for...
 
 ### The "I want full control" way
 
-Alternatively, in case your page is an SPA that injects/removes SoundCloud iframes at runtime, you
+In case your page is an SPA that injects/removes SoundCloud iframes at runtime, you
 need to keep track of additionally added iframes _after_ the document has finished loading.
+You probably also want to clean up after yourself when you no longer need these iframes.
 
 You can attach Analytics triggers to injected iframes by passing their reference to the
 _attachSoundCloudAnalytics()_-method. Your pseudo code would look like:
@@ -75,8 +89,13 @@ async function executedOnce() {
     await init(); // loads SoundCloud SDK
 }
 
-function executeAfterNewIframeIsInjected( iframeSelector ) {
-    attachSoundCloudAnalytics( iframeSelector );
+function executeAfterNewIframeIsInjected( iframeReference ) {
+    const result = attachSoundCloudAnalytics( iframeReference );
+    if ( result !== null ) {
+        // SoundCloud Analytics attached successfully
+        // invoke dispose() when the iframe is no longer needed / removed from page
+        const { element, widget, dispose } = result;
+    }
 }
 ```
 

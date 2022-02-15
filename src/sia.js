@@ -37,14 +37,15 @@ export function init() {
                 }
             });
 
-            // if no playlists were found, don't do anything.
+            // wrap each iframe inside an SC.Widget and attach the listeners
 
-            if ( playlists.length > 0 ) {
-                loop( playlists, ( playlist ) => {
-                    attachSoundCloudAnalytics( playlist );
-                });
-            }
-            resolve();
+            const embeds = [];
+
+            loop( playlists, ( playlist ) => {
+                embeds.push( attachSoundCloudAnalytics( playlist ));
+            });
+
+            resolve( embeds.filter( Boolean ));
         };
 
         // ensure the SoundCloud Widget API has been loaded
@@ -62,15 +63,22 @@ export function init() {
 }
 
 /**
- * Attach event listeners and hooks into Analytics
- * to the provided HTMLIFrameElement
+ * Wrap provided HTMLIFrameElement into an SC.Widget, attach event
+ * listeners and hook the SoundCloud events into Google Analytics.
+ * Upon success, these entities are returned along with a dispose()
+ * method that cleans up all listeners when the element is no longer needed.
  *
  * @param {HTMLIFrameElement} element
+ * @returns {{
+ *     element: HTMLIFrameElement,
+ *     widget: SC.Widget,
+ *     dispose: Function
+ * }|null}
  */
 export function attachSoundCloudAnalytics( element ) {
 
     if ( !element ) {
-        return;
+        return null;
     }
 
     // don't create a Widget TWICE for the same IFrame / IFrame src
@@ -87,7 +95,13 @@ export function attachSoundCloudAnalytics( element ) {
     element.setAttribute( "data-sia", iframeURL );
 
     // wrap element in SC.Widget instance
-    const widget = widgetAPI( element );
+
+    let widget;
+    try {
+        widget = widgetAPI( element );
+    } catch {
+        return null; // likely no valid IFrame given
+    }
 
     const ENUM = widgetAPI.Events;
 
@@ -104,9 +118,11 @@ export function attachSoundCloudAnalytics( element ) {
 
     const INTERVAL = 2500;
 
+    /*
     widget.bind( ENUM.READY, () => {
         // no need to track, can be used for debugging purposes
     });
+    */
 
     widget.bind( ENUM.ERROR, () => {
         trackEvent( ANALYTICS_EVENT_CATEGORY, "Error", currentTrackTitle );
@@ -187,6 +203,7 @@ export function attachSoundCloudAnalytics( element ) {
             }
         });
     });
+
     widget.bind( ENUM.SEEK, ( playerData ) => {
         vo = getSoundCloudTrackVO( tracks, currentTrackTitle, currentTrackId );
 
@@ -200,6 +217,7 @@ export function attachSoundCloudAnalytics( element ) {
             trackEvent( ANALYTICS_EVENT_CATEGORY, "Playback scrubbed", currentTrackTitle );
         }
     });
+
     widget.bind( ENUM.FINISH, () => {
         vo = getSoundCloudTrackVO( tracks, currentTrackTitle, currentTrackId );
         if ( !vo.finished ) {
@@ -208,6 +226,17 @@ export function attachSoundCloudAnalytics( element ) {
             trackEvent( ANALYTICS_EVENT_CATEGORY, event, currentTrackTitle );
         }
     });
+
+    return {
+        element,
+        widget,
+        dispose : () => {
+            [ ENUM.ERROR, ENUM.PLAY_PROGRESS, ENUM.PLAY, ENUM.PAUSE, ENUM.SEEK, ENUM.FINISH ].forEach( event => {
+                widget.unbind( event );
+            });
+            element.removeAttribute( "data-sia" );
+        }
+    };
 }
 
 /* internal methods */
