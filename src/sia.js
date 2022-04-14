@@ -16,26 +16,37 @@ let widgetAPI = "SC" in window && typeof window.SC.Widget === "function" ? windo
  * and automatically attaches Analytics handlers to all embedded
  * SoundCloud HTMLIFrameElements currently in the document
  *
+ * @param {boolean=} alwaysLoadSDK optional, whether to always load the
+ *                   SoundCloud SDK regardless of iframes being embedded
+ *                   in the page. Defaults to false
+ *
  * @returns {Promise}
  */
-export function init() {
+export function init( alwaysLoadSDK = false ) {
     return new Promise(( resolve, reject ) => {
+
+        // retrieve all <iframe> embeds and filter them by the SoundCloud URL
+        // note we use older DOM methods instead of querySelectorAll() to provide
+        // a very simple backwards compatibility
+        const iframes   = document.getElementsByTagName( "iframe" );
+        const playlists = [];
+        loop( iframes, ( iframe ) => {
+            if ( iframe.hasAttribute( "src" ) && iframe.getAttribute( "src" ).includes( SOUNDCLOUD_EMBED )) {
+                playlists.push( iframe );
+            }
+        });
+
+        // in case we only want to load the SDK when there are iframes
+        // and there aren't any embedded, stop here
+
+        if ( !alwaysLoadSDK && !playlists.length ) {
+            resolve( [] );
+            return;
+        }
 
         // process all IFrames one by one and add event listeners and Analytics hooks
 
         const processIFrames = () => {
-
-            // retrieve all <iframe> embeds and filter them by the SoundCloud URL
-            // we use older DOM methods instead of querySelectorAll() to provide
-            // a very simple backwards compatibility
-
-            const iframes   = document.getElementsByTagName( "iframe" );
-            const playlists = [];
-            loop( iframes, ( iframe ) => {
-                if ( iframe.hasAttribute( "src" ) && iframe.getAttribute( "src" ).includes( SOUNDCLOUD_EMBED )) {
-                    playlists.push( iframe );
-                }
-            });
 
             // wrap each iframe inside an SC.Widget and attach the listeners
 
@@ -44,7 +55,6 @@ export function init() {
             loop( playlists, ( playlist ) => {
                 embeds.push( attachSoundCloudAnalytics( playlist ));
             });
-
             resolve( embeds.filter( Boolean ));
         };
 

@@ -1,4 +1,4 @@
-import { trackEvent, reset } from '../../src/third_party/analytics.js';
+import { trackEvent, reset } from "../../src/third_party/google-analytics.js";
 
 describe( "Analytics", () => {
     /* setup */

@@ -57,9 +57,11 @@ document.addEventListener( "DOMContentLoaded", readyHandler );
 ```
 
 The above will run once when the document finishes loading. It will then scan the document for
-iframes with SoundCloud content and attach the listeners automatically. The returned value is
-a list of successfully bound listeners for each iframe, where each value is wrapped inside
-an object like so:
+iframes with SoundCloud content. When found, the SoundCloud SDK is loaded asynchronously and
+subsequently the playback listeners will be added.
+
+The returned value is a list of successfully bound listeners for each iframe, where each value is
+wrapped inside an object like so:
 
 ```js
 {
@@ -86,7 +88,9 @@ _attachSoundCloudAnalytics()_-method. Your pseudo code would look like:
 import { init, attachSoundCloudAnalytics } from "soundcloud-iframe-analytics";
 
 async function executedOnce() {
-    await init(); // loads SoundCloud SDK
+    // passing true guarantees SoundCloud SDK is loaded
+    // regardless of iframes being present at the moment of initialization
+    await init( true );
 }
 
 function executeAfterNewIframeIsInjected( iframeReference ) {

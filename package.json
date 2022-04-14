@@ -1,6 +1,6 @@
 {
   "name": "soundcloud-iframe-analytics",
-  "version": "2.0.1",
+  "version": "3.0.0",
   "description": "Google Analytics tracking of user interaction on embedded SoundCloud iframes",
   "author": "Igor Zinken",
   "license": "MIT",
